@@ -17,12 +17,6 @@ export function activate(context: vscode.ExtensionContext) {
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('unigetaset.helloWorld', () => {
 		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from UniGetaSet!');
-
-		console.log('Congratulations, your extension "unigetaset" is now active!');
-		var iptBox = vscode.window.showInputBox({prompt:'oi', value:'teste'});
 		executaExtensao();
 		
 		
@@ -31,17 +25,11 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 }
 function executaExtensao():void{
-	var inicioIntervaloSelecao:vscode.Position;
-	var fimIntervaloSelecao:vscode.Position;
-	var intervaloSelecao:vscode.Range;
 	var formatoArquivo:string;
 	var selecaoCodigo:string;
 	if(vscode.window.activeTextEditor != undefined){
 		if(vscode.window.activeTextEditor.selections.length > 0){
-			inicioIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.start.line, vscode.window.activeTextEditor?.selection.start.character);
-			fimIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.end.line, vscode.window.activeTextEditor?.selection.end.character);
-			intervaloSelecao = new vscode.Range(inicioIntervaloSelecao, fimIntervaloSelecao)
-			selecaoCodigo = vscode.window.activeTextEditor.document.getText(intervaloSelecao)
+			selecaoCodigo = retornaSelecaoCodigoArquivo();
 			formatoArquivo = retornaFormatoArquivo(vscode.window.activeTextEditor.document.fileName);
 			console.log('\nFORMATO ARQUIVO = ' + formatoArquivo)
 			switch(formatoArquivo){
@@ -51,6 +39,17 @@ function executaExtensao():void{
 			}
 		}
 	}
+}
+function retornaSelecaoCodigoArquivo():string{
+	var inicioIntervaloSelecao:vscode.Position;
+	var fimIntervaloSelecao:vscode.Position;
+	var intervaloSelecao:vscode.Range;
+	var selecaoCodigo:string;
+	inicioIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.start.line!, vscode.window.activeTextEditor?.selection.start.character!);
+	fimIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.end.line!, vscode.window.activeTextEditor?.selection.end.character!);
+	intervaloSelecao = new vscode.Range(inicioIntervaloSelecao, fimIntervaloSelecao)
+	selecaoCodigo = vscode.window.activeTextEditor!.document.getText(intervaloSelecao);
+	return selecaoCodigo;
 }
 function retornaFormatoArquivo(caminho:string):string{
 	var indicePonto = caminho.indexOf('.', 0);
