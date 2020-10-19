@@ -4,6 +4,7 @@ import { title } from 'process';
 import { pipeline } from 'stream';
 import * as vscode from 'vscode';
 
+const tabulacaoVSCode = "    ";
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -141,15 +142,15 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 function geraMetodoGetPython(atributoNomeMetodo : string, atributoCodigo : string) : string{
 	var metodoGet : string;
 	//VsCode, por padrão, utiliza 4 espaços ao invés como tab
-	metodoGet = "    def get" + atributoNomeMetodo + "(self):\n";
-	metodoGet += "       return self." + atributoCodigo + "\n\n";
+	metodoGet = tabulacaoVSCode + "def get" + atributoNomeMetodo + "(self):\n";
+	metodoGet += tabulacaoVSCode + tabulacaoVSCode + "return self." + atributoCodigo + "\n\n";
 	return metodoGet;
 }
 function geraMetodoSetPython(atributoNomeMetodo : string, atributoCodigo : string) : string{
 	var metodoSet : string;
 	//VsCode, por padrão, utiliza 4 espaços ao invés como tab
-	metodoSet = "    def set" + atributoNomeMetodo + "(self, " + atributoCodigo + "):\n";
-	metodoSet += "	     self." + atributoCodigo + " = " + atributoCodigo + "\n\n";
+	metodoSet = tabulacaoVSCode + "def set" + atributoNomeMetodo + "(self, " + atributoCodigo + "):\n";
+	metodoSet += tabulacaoVSCode + tabulacaoVSCode + "self." + atributoCodigo + " = " + atributoCodigo + "\n\n";
 	return metodoSet;
 }
 function formataNomeAtributoPython(atributo : string) : string{
