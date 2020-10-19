@@ -45,10 +45,12 @@ function retornaSelecaoCodigoArquivo():string{
 	var fimIntervaloSelecao:vscode.Position;
 	var intervaloSelecao:vscode.Range;
 	var selecaoCodigo:string;
+
 	inicioIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.start.line!, vscode.window.activeTextEditor?.selection.start.character!);
 	fimIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.end.line!, vscode.window.activeTextEditor?.selection.end.character!);
 	intervaloSelecao = new vscode.Range(inicioIntervaloSelecao, fimIntervaloSelecao)
 	selecaoCodigo = vscode.window.activeTextEditor!.document.getText(intervaloSelecao);
+	
 	return selecaoCodigo;
 }
 function retornaFormatoArquivo(caminho:string):string{
@@ -56,13 +58,50 @@ function retornaFormatoArquivo(caminho:string):string{
 	return caminho.substring(indicePonto + 1, caminho.length);
 }
 function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string):void{
-	var alfabetoPython : string[] = [" ", "#", "self", ".", "=", "get", "set", "(", ")", ":", ","];
+	var alfabetoPython : string[] = [" ", "#", "self", ".", "=", "get", "set", "(", ")", ":", ",", "\\"];
 	var alfabetoIgnorar : string[] = ["=", "#"];
-	var selecaoCodigoModificada;
+	var selecaoCodigoModificada : string;
+	
 
 	//Retirando palavras do alfabeto das linguagens Python e Ignorar
 	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, alfabetoPython, alfabetoIgnorar);
+	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, alfabetoPython[1]);
 	console.log("\nSELEÇÃO MODIFICADA = " + selecaoCodigoModificada);
+	geraMetodosGetSetPython(selecaoCodigoModificada);
+}
+function retiraComentariosSelecaoCodigoPython(selecaoCodigo : string, tokenComentario : string) : string{
+	var indiceTokenComentario : number = 0;
+	var indiceTokenQuebraLinha : number = 0;
+	var strComentario : string;
+	var nomeAtributoAtual : string = "";
+	var charAtual : string;
+	while(indiceTokenComentario >= 0){
+
+		indiceTokenComentario = selecaoCodigo.indexOf(tokenComentario, 0);
+		if (indiceTokenComentario >= 0){
+			indiceTokenQuebraLinha = selecaoCodigo.indexOf("\n", indiceTokenComentario);
+			if (indiceTokenQuebraLinha < 0){
+				indiceTokenQuebraLinha = selecaoCodigo.length;
+			}
+			strComentario = selecaoCodigo.substring(indiceTokenComentario, indiceTokenQuebraLinha);
+			selecaoCodigo = selecaoCodigo.replace(strComentario, "");
+		}
+		
+	}
+	return selecaoCodigo;
+}
+function geraMetodosGetSetPython(selecaoCodigo : string, alfabetoPython : string[]){
+	var indiceToken : number = 0;
+	var nomeAtributoAtual : string = "";
+	var charAtual : string;
+	while(indiceToken >= 0){
+		charAtual = selecaoCodigo.charAt(indiceToken);
+		if (charAtual == alfabetoPython[4]){
+
+		}
+		indiceToken = selecaoCodigo.indexOf(alfabetoPython[4], indiceToken);
+		indiceToken++;
+	}
 }
 function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, alfabetoPython : string[], alfabetoIgnorar : string[]) : string{
 	var palavraPython : string;
