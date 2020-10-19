@@ -6,7 +6,7 @@ This is an extension for VSCode that generates Get and Set methods for most lang
 
 -Implementation of the command 'unigetaset: Selection Get and Set' that generates get and set methods based on the selection of a code snippet from the document currently active in VSCode. The command currently only works with Python source code.
 
-\!\[Command 'unigetaset: Selection Get and Set'\]\(features_images/Exemplo_Uso_unigetaset_Python.gif\)
+\!\[Command 'unigetaset: Selection Get and Set'\]\(features_images/unigetaset_on_Command_Palette.png\)
 
 ## Requirements
 
