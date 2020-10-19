@@ -56,7 +56,26 @@ function retornaFormatoArquivo(caminho:string):string{
 	return caminho.substring(indicePonto + 1, caminho.length);
 }
 function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string):void{
-	console.log('\nÉ PYTHON!')
+	var alfabetoPython : string[] = [" ", "#", "self", ".", "=", "get", "set", "(", ")", ":", ","];
+	var alfabetoIgnorar : string[] = ["=", "#"];
+	var selecaoCodigoModificada;
+
+	//Retirando palavras do alfabeto das linguagens Python e Ignorar
+	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, alfabetoPython, alfabetoIgnorar);
+	console.log("\nSELEÇÃO MODIFICADA = " + selecaoCodigoModificada);
+}
+function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, alfabetoPython : string[], alfabetoIgnorar : string[]) : string{
+	var palavraPython : string;
+	console.log("ALFABETO PYTHON:\n");
+	for(var i=0;i<alfabetoPython.length;i++){
+		palavraPython = alfabetoPython[i];
+		if (!alfabetoIgnorar.includes(palavraPython, 0)){
+			selecaoCodigo = selecaoCodigo.split(alfabetoPython[i]).join("");
+			console.log(alfabetoPython[i] + " [" + alfabetoPython[i].length + "]  ");
+		}
+	}
+	return selecaoCodigo;
+	
 }
 // this method is called when your extension is deactivated
 export function deactivate() {}
