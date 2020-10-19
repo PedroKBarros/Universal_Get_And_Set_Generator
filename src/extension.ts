@@ -71,13 +71,11 @@ function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string, inte
 	//Retirando palavras do alfabeto das linguagens Python e Ignorar
 	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, alfabetoPython, alfabetoIgnorar);
 	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, alfabetoPython[1]);
+	console.log("CÓDIGO MOD:\n" + selecaoCodigoModificada);
 	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, alfabetoPython[4]);
 	apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);
 }
-function apresentaMetodosGetSetDocument(metodosGetSet : string, intervaloSelecao : vscode.Range) : void{
-	//var posicaoInsercaoFinal : vscode.Position;
-	//posicaoInsercaoFinal = new vscode.Position(intervaloSelecao.end.line + 1, intervaloSelecao.end.character + 1)
-	
+function apresentaMetodosGetSetDocument(metodosGetSet : string, intervaloSelecao : vscode.Range) : void{	
 	var editorTextoAtivo = vscode.window.activeTextEditor;
 	var documento = editorTextoAtivo?.edit(editBuilder => {
 		editBuilder.insert(intervaloSelecao.end, metodosGetSet);
@@ -118,7 +116,7 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 		indiceTokenAtribuicao = selecaoCodigo.indexOf(tokenAtribuicao, indiceTokenAnteriorAtribuicao + 1);
 		if (indiceTokenAtribuicao >= 0){
 			if (numeroTokenAtribuicao == 0){
-				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao - 2);
+				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao);
 				nomeAtributoAtualFormatado = formataNomeAtributoPython(nomeAtributoAtual);
 				metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
