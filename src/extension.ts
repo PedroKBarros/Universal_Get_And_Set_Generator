@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('unigetaset.helloWorld', () => {
+	let disposable = vscode.commands.registerCommand('unigetaset.selectionGetSet', () => {
 		// The code you place here will be executed every time your command is executed
 		executaExtensao();
 		
@@ -69,6 +69,10 @@ function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string):void
 	console.log("\nSELEÇÃO MODIFICADA = " + selecaoCodigoModificada);
 	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, alfabetoPython[4]);
 	console.log("\nMÉTODOS GET E SET:\n" + metodosGetSet);
+	apresentaMetodosGetSetDocument(metodosGetSet);
+}
+function apresentaMetodosGetSetDocument(metodosGetSet : string) : void{
+	vscode.window.showInformationMessage("xxxx");
 }
 function retiraComentariosSelecaoCodigoPython(selecaoCodigo : string, tokenComentario : string) : string{
 	var indiceTokenComentario : number = 0;
@@ -97,6 +101,7 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 	var indiceTokenQuebraLinha : number = 0;
 	var numeroTokenAtribuicao : number = 0;
 	var nomeAtributoAtual : string = "";
+	var nomeAtributoAtualFormatado : string = "";
 	var metodosGetSet : string = "";
 
 	while(indiceTokenAtribuicao >= 0){
@@ -104,17 +109,17 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 		if (indiceTokenAtribuicao >= 0){
 			if (numeroTokenAtribuicao == 0){
 				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao - 1);
-				nomeAtributoAtual = formataNomeAtributoPython(nomeAtributoAtual);
-				metodosGetSet += geraMetodoGetPython(nomeAtributoAtual);
-				metodosGetSet += geraMetodoSetPython(nomeAtributoAtual);
+				nomeAtributoAtualFormatado = formataNomeAtributoPython(nomeAtributoAtual);
+				metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
+				metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				numeroTokenAtribuicao++;
 				indiceTokenAnteriorAtribuicao = indiceTokenAtribuicao;
 			}else{
 				indiceTokenQuebraLinha = selecaoCodigo.indexOf("\n", indiceTokenAnteriorAtribuicao);
-				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenQuebraLinha + 1, indiceTokenAtribuicao + 1);
-				nomeAtributoAtual = formataNomeAtributoPython(nomeAtributoAtual);
-				metodosGetSet += geraMetodoGetPython(nomeAtributoAtual);
-				metodosGetSet += geraMetodoSetPython(nomeAtributoAtual);
+				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenQuebraLinha + 1, indiceTokenAtribuicao);
+				nomeAtributoAtualFormatado = formataNomeAtributoPython(nomeAtributoAtual);
+				metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
+				metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				numeroTokenAtribuicao++;
 				indiceTokenAnteriorAtribuicao = indiceTokenAtribuicao;
 			}
@@ -124,22 +129,22 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 	
 	return metodosGetSet;
 }
-function geraMetodoGetPython(atributo : string) : string{
+function geraMetodoGetPython(atributoNomeMetodo : string, atributoCodigo : string) : string{
 	var metodoGet : string;
 	
-	metodoGet = "def get" + atributo + "(self):\n";
-	metodoGet += "	return self." + atributo + "\n";
+	metodoGet = "def get" + atributoNomeMetodo + "(self):\n";
+	metodoGet += "	return self." + atributoCodigo + "\n";
 	return metodoGet;
 }
-function geraMetodoSetPython(atributo : string) : string{
+function geraMetodoSetPython(atributoNomeMetodo : string, atributoCodigo : string) : string{
 	var metodoSet : string;
 	
-	metodoSet = "def set" + atributo + "(self, " + atributo + "):\n";
-	metodoSet += "	self." + atributo + " = " + atributo + "\n";
+	metodoSet = "def set" + atributoNomeMetodo + "(self, " + atributoCodigo + "):\n";
+	metodoSet += "	self." + atributoCodigo + " = " + atributoCodigo + "\n";
 	return metodoSet;
 }
 function formataNomeAtributoPython(atributo : string) : string{
-	return atributo.charAt(0).toUpperCase() + atributo.substring(1, atributo.length - 1).toLowerCase();
+	return atributo.charAt(0).toUpperCase() + atributo.substring(1, atributo.length).toLowerCase();
 }
 function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, alfabetoPython : string[], alfabetoIgnorar : string[]) : string{
 	var palavraPython : string;

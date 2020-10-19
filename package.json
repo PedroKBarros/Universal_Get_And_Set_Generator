@@ -10,14 +10,14 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:unigetaset.helloWorld"
+		"onCommand:unigetaset.selectionGetSet"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "unigetaset.helloWorld",
-				"title": "Hello World"
+				"command": "unigetaset.selectionGetSet",
+				"title": "Selection Get and Set"
 			}
 		]
 	},
