@@ -61,13 +61,14 @@ function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string):void
 	var alfabetoPython : string[] = [" ", "#", "self", ".", "=", "get", "set", "(", ")", ":", ",", "\\"];
 	var alfabetoIgnorar : string[] = ["=", "#"];
 	var selecaoCodigoModificada : string;
-	
+	var metodosGetSet : string;
 
 	//Retirando palavras do alfabeto das linguagens Python e Ignorar
 	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, alfabetoPython, alfabetoIgnorar);
 	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, alfabetoPython[1]);
 	console.log("\nSELEÇÃO MODIFICADA = " + selecaoCodigoModificada);
-	geraMetodosGetSetPython(selecaoCodigoModificada);
+	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, alfabetoPython[4]);
+	console.log("\nMÉTODOS GET E SET:\n" + metodosGetSet);
 }
 function retiraComentariosSelecaoCodigoPython(selecaoCodigo : string, tokenComentario : string) : string{
 	var indiceTokenComentario : number = 0;
@@ -90,18 +91,55 @@ function retiraComentariosSelecaoCodigoPython(selecaoCodigo : string, tokenComen
 	}
 	return selecaoCodigo;
 }
-function geraMetodosGetSetPython(selecaoCodigo : string, alfabetoPython : string[]){
-	var indiceToken : number = 0;
+function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : string) : string{
+	var indiceTokenAtribuicao : number = 0;
+	var indiceTokenAnteriorAtribuicao : number = 0;
+	var indiceTokenQuebraLinha : number = 0;
+	var numeroTokenAtribuicao : number = 0;
 	var nomeAtributoAtual : string = "";
-	var charAtual : string;
-	while(indiceToken >= 0){
-		charAtual = selecaoCodigo.charAt(indiceToken);
-		if (charAtual == alfabetoPython[4]){
+	var metodosGetSet : string = "";
 
+	while(indiceTokenAtribuicao >= 0){
+		indiceTokenAtribuicao = selecaoCodigo.indexOf(tokenAtribuicao, indiceTokenAnteriorAtribuicao + 1);
+		if (indiceTokenAtribuicao >= 0){
+			if (numeroTokenAtribuicao == 0){
+				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao - 1);
+				nomeAtributoAtual = formataNomeAtributoPython(nomeAtributoAtual);
+				metodosGetSet += geraMetodoGetPython(nomeAtributoAtual);
+				metodosGetSet += geraMetodoSetPython(nomeAtributoAtual);
+				numeroTokenAtribuicao++;
+				indiceTokenAnteriorAtribuicao = indiceTokenAtribuicao;
+			}else{
+				indiceTokenQuebraLinha = selecaoCodigo.indexOf("\n", indiceTokenAnteriorAtribuicao);
+				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenQuebraLinha + 1, indiceTokenAtribuicao + 1);
+				nomeAtributoAtual = formataNomeAtributoPython(nomeAtributoAtual);
+				metodosGetSet += geraMetodoGetPython(nomeAtributoAtual);
+				metodosGetSet += geraMetodoSetPython(nomeAtributoAtual);
+				numeroTokenAtribuicao++;
+				indiceTokenAnteriorAtribuicao = indiceTokenAtribuicao;
+			}
 		}
-		indiceToken = selecaoCodigo.indexOf(alfabetoPython[4], indiceToken);
-		indiceToken++;
+		
 	}
+	
+	return metodosGetSet;
+}
+function geraMetodoGetPython(atributo : string) : string{
+	var metodoGet : string;
+	
+	metodoGet = "def get" + atributo + "(self):\n";
+	metodoGet += "	return self." + atributo + "\n";
+	return metodoGet;
+}
+function geraMetodoSetPython(atributo : string) : string{
+	var metodoSet : string;
+	
+	metodoSet = "def set" + atributo + "(self, " + atributo + "):\n";
+	metodoSet += "	self." + atributo + " = " + atributo + "\n";
+	return metodoSet;
+}
+function formataNomeAtributoPython(atributo : string) : string{
+	return atributo.charAt(0).toUpperCase() + atributo.substring(1, atributo.length - 1).toLowerCase();
 }
 function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, alfabetoPython : string[], alfabetoIgnorar : string[]) : string{
 	var palavraPython : string;
@@ -110,7 +148,6 @@ function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, alfabetoPytho
 		palavraPython = alfabetoPython[i];
 		if (!alfabetoIgnorar.includes(palavraPython, 0)){
 			selecaoCodigo = selecaoCodigo.split(alfabetoPython[i]).join("");
-			console.log(alfabetoPython[i] + " [" + alfabetoPython[i].length + "]  ");
 		}
 	}
 	return selecaoCodigo;
