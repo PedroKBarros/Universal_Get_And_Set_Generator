@@ -17,7 +17,7 @@
 		"commands": [
 			{
 				"command": "unigetaset.selectionGetSet",
-				"title": "Selection Get and Set"
+				"title": "unigetaset: Selection Get and Set"
 			}
 		]
 	},

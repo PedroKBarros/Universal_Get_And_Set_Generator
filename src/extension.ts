@@ -17,9 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('unigetaset.selectionGetSet', () => {
 		// The code you place here will be executed every time your command is executed
-		executaExtensao();
-		
-		
+		executaExtensao();		
 	});
 
 	context.subscriptions.push(disposable);
@@ -27,20 +25,21 @@ export function activate(context: vscode.ExtensionContext) {
 function executaExtensao():void{
 	var formatoArquivo:string;
 	var selecaoCodigo:string;
+	var intervaloSelecaoCodigo : vscode.Range;
 	if(vscode.window.activeTextEditor != undefined){
 		if(vscode.window.activeTextEditor.selections.length > 0){
-			selecaoCodigo = retornaSelecaoCodigoArquivo();
+			intervaloSelecaoCodigo = retornaIntervaloSelecaoCodigoArquivo();
+			selecaoCodigo = retornaSelecaoCodigoArquivo(intervaloSelecaoCodigo);
 			formatoArquivo = retornaFormatoArquivo(vscode.window.activeTextEditor.document.fileName);
-			console.log('\nFORMATO ARQUIVO = ' + formatoArquivo)
 			switch(formatoArquivo){
 				case 'py':
-					executaExtensaoPython(selecaoCodigo, formatoArquivo);
+					executaExtensaoPython(selecaoCodigo, formatoArquivo, intervaloSelecaoCodigo);
 					break;
 			}
 		}
 	}
 }
-function retornaSelecaoCodigoArquivo():string{
+function retornaIntervaloSelecaoCodigoArquivo() : vscode.Range{
 	var inicioIntervaloSelecao:vscode.Position;
 	var fimIntervaloSelecao:vscode.Position;
 	var intervaloSelecao:vscode.Range;
@@ -49,15 +48,20 @@ function retornaSelecaoCodigoArquivo():string{
 	inicioIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.start.line!, vscode.window.activeTextEditor?.selection.start.character!);
 	fimIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.end.line!, vscode.window.activeTextEditor?.selection.end.character!);
 	intervaloSelecao = new vscode.Range(inicioIntervaloSelecao, fimIntervaloSelecao)
-	selecaoCodigo = vscode.window.activeTextEditor!.document.getText(intervaloSelecao);
 	
+	return intervaloSelecao;
+}
+function retornaSelecaoCodigoArquivo(intervaloSelecao : vscode.Range):string{
+	var selecaoCodigo:string;
+
+	selecaoCodigo = vscode.window.activeTextEditor!.document.getText(intervaloSelecao);
 	return selecaoCodigo;
 }
 function retornaFormatoArquivo(caminho:string):string{
 	var indicePonto = caminho.indexOf('.', 0);
 	return caminho.substring(indicePonto + 1, caminho.length);
 }
-function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string):void{
+function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string, intervaloSelecaoCodigo : vscode.Range):void{
 	var alfabetoPython : string[] = [" ", "#", "self", ".", "=", "get", "set", "(", ")", ":", ",", "\\"];
 	var alfabetoIgnorar : string[] = ["=", "#"];
 	var selecaoCodigoModificada : string;
@@ -66,13 +70,18 @@ function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string):void
 	//Retirando palavras do alfabeto das linguagens Python e Ignorar
 	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, alfabetoPython, alfabetoIgnorar);
 	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, alfabetoPython[1]);
-	console.log("\nSELEÇÃO MODIFICADA = " + selecaoCodigoModificada);
 	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, alfabetoPython[4]);
-	console.log("\nMÉTODOS GET E SET:\n" + metodosGetSet);
-	apresentaMetodosGetSetDocument(metodosGetSet);
+	apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);
 }
-function apresentaMetodosGetSetDocument(metodosGetSet : string) : void{
-	vscode.window.showInformationMessage("xxxx");
+function apresentaMetodosGetSetDocument(metodosGetSet : string, intervaloSelecao : vscode.Range) : void{
+	//var posicaoInsercaoFinal : vscode.Position;
+	//posicaoInsercaoFinal = new vscode.Position(intervaloSelecao.end.line + 1, intervaloSelecao.end.character + 1)
+	
+	var editorTextoAtivo = vscode.window.activeTextEditor;
+	var documento = editorTextoAtivo?.edit(editBuilder => {
+		editBuilder.insert(intervaloSelecao.end, metodosGetSet);
+	})	
+	
 }
 function retiraComentariosSelecaoCodigoPython(selecaoCodigo : string, tokenComentario : string) : string{
 	var indiceTokenComentario : number = 0;
@@ -102,13 +111,13 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 	var numeroTokenAtribuicao : number = 0;
 	var nomeAtributoAtual : string = "";
 	var nomeAtributoAtualFormatado : string = "";
-	var metodosGetSet : string = "";
+	var metodosGetSet : string = "\n\n";
 
 	while(indiceTokenAtribuicao >= 0){
 		indiceTokenAtribuicao = selecaoCodigo.indexOf(tokenAtribuicao, indiceTokenAnteriorAtribuicao + 1);
 		if (indiceTokenAtribuicao >= 0){
 			if (numeroTokenAtribuicao == 0){
-				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao - 1);
+				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao - 2);
 				nomeAtributoAtualFormatado = formataNomeAtributoPython(nomeAtributoAtual);
 				metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
@@ -131,16 +140,16 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 }
 function geraMetodoGetPython(atributoNomeMetodo : string, atributoCodigo : string) : string{
 	var metodoGet : string;
-	
-	metodoGet = "def get" + atributoNomeMetodo + "(self):\n";
-	metodoGet += "	return self." + atributoCodigo + "\n";
+	//VsCode, por padrão, utiliza 4 espaços ao invés como tab
+	metodoGet = "    def get" + atributoNomeMetodo + "(self):\n";
+	metodoGet += "       return self." + atributoCodigo + "\n\n";
 	return metodoGet;
 }
 function geraMetodoSetPython(atributoNomeMetodo : string, atributoCodigo : string) : string{
 	var metodoSet : string;
-	
-	metodoSet = "def set" + atributoNomeMetodo + "(self, " + atributoCodigo + "):\n";
-	metodoSet += "	self." + atributoCodigo + " = " + atributoCodigo + "\n";
+	//VsCode, por padrão, utiliza 4 espaços ao invés como tab
+	metodoSet = "    def set" + atributoNomeMetodo + "(self, " + atributoCodigo + "):\n";
+	metodoSet += "	     self." + atributoCodigo + " = " + atributoCodigo + "\n\n";
 	return metodoSet;
 }
 function formataNomeAtributoPython(atributo : string) : string{
@@ -148,7 +157,6 @@ function formataNomeAtributoPython(atributo : string) : string{
 }
 function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, alfabetoPython : string[], alfabetoIgnorar : string[]) : string{
 	var palavraPython : string;
-	console.log("ALFABETO PYTHON:\n");
 	for(var i=0;i<alfabetoPython.length;i++){
 		palavraPython = alfabetoPython[i];
 		if (!alfabetoIgnorar.includes(palavraPython, 0)){
