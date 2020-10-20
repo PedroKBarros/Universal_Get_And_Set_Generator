@@ -68,11 +68,13 @@ function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string, inte
 	var regexAlfabetoPythonRetirar : RegExp;
 	var palavraPythonComentario : string = "#";
 	var palavraPythonAtribuicao : string = "=";
-	regexAlfabetoPythonRetirar = / |self|\.|get|set|\(|\)|:|,|\\/g;
+	
+	regexAlfabetoPythonRetirar = / |\bself\b|\.|\bget\b|\bset\b|\(|\)|:|,|\\|\band\b|\bdel\b|\bfrom\b|\bnot\b|\bwhile\b|\bas\b|\belif\b|\bglobal\b|\bor\b|\bwith\b|\bassert\b|\belse\b|\bif\b|\bpass\b|\byield\b|\bbreak\b|\bexcept\b|\bimport\b|\bprint\b|\bclass\b|\bexec\b|\bin\b|\braise\b|\bcontinue\b|\bfinally\b|\bis\b|\breturn\b|\bdef\b|\bfor\b|\blambda\b|\btry\b/g;
 
 	//Retirando palavras do alfabeto das linguagens Python e Ignorar
 	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, regexAlfabetoPythonRetirar);
 	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, palavraPythonComentario);
+	console.log("CODIGO MODIFICADO\n" + selecaoCodigoModificada);
 	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, palavraPythonAtribuicao);
 	apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);
 }
