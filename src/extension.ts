@@ -4,7 +4,9 @@ import { title } from 'process';
 import { pipeline } from 'stream';
 import * as vscode from 'vscode';
 
-const tabulacaoVSCode = "    ";
+const tabulacaoVSCode : string = "    ";
+const codigoComandoTrechoCodigoSelecionado : number = 1;
+const codigoComandoNomeAtributos : number = 2;
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -18,26 +20,23 @@ export function activate(context: vscode.ExtensionContext) {
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('unigetaset.selectionGetSet', () => {
 		// The code you place here will be executed every time your command is executed
-		executaExtensao();		
+		executaExtensao(codigoComandoTrechoCodigoSelecionado);		
 	});
-
+	
 	context.subscriptions.push(disposable);
 }
-function executaExtensao():void{
+function executaExtensao(codigoComando : number) : void{
 	var formatoArquivo:string;
 	var selecaoCodigo:string;
 	var intervaloSelecaoCodigo : vscode.Range;
-
 	if(vscode.window.activeTextEditor != undefined){
-		if(vscode.window.activeTextEditor.selections.length > 0){
-			intervaloSelecaoCodigo = retornaIntervaloSelecaoCodigoArquivo();
-			selecaoCodigo = retornaSelecaoCodigoArquivo(intervaloSelecaoCodigo);
-			formatoArquivo = retornaFormatoArquivo(vscode.window.activeTextEditor.document.fileName);
-			switch(formatoArquivo){
-				case 'py':
-					executaExtensaoPython(selecaoCodigo, formatoArquivo, intervaloSelecaoCodigo);
-					break;
-			}
+		formatoArquivo = retornaFormatoArquivo(vscode.window.activeTextEditor.document.fileName);
+		intervaloSelecaoCodigo = retornaIntervaloSelecaoCodigoArquivo();
+		selecaoCodigo = retornaSelecaoCodigoArquivo(intervaloSelecaoCodigo);
+		switch(formatoArquivo){
+			case 'py':
+				executaExtensaoPython(codigoComando, selecaoCodigo, intervaloSelecaoCodigo);
+			break;		
 		}
 	}
 }
@@ -62,21 +61,31 @@ function retornaFormatoArquivo(caminho:string):string{
 
 	return caminho.substring(indicePonto + 1, caminho.length);
 }
-function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string, intervaloSelecaoCodigo : vscode.Range):void{
+function executaExtensaoPython(codigoComando : number, selecaoCodigo:string, intervaloSelecaoCodigo : vscode.Range):void{
+	switch(codigoComando){
+		case 1:
+			executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo, intervaloSelecaoCodigo);
+		default:
+			executaExtensaoPythonPorNomesAtributos();
+	}
+}
+function executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo : string, intervaloSelecaoCodigo : vscode.Range) : void{
 	var selecaoCodigoModificada : string;
 	var metodosGetSet : string;
 	var regexAlfabetoPythonRetirar : RegExp;
 	var palavraPythonComentario : string = "#";
 	var palavraPythonAtribuicao : string = "=";
-	
-	regexAlfabetoPythonRetirar = / |\bself\b|\.|\bget\b|\bset\b|\(|\)|:|,|\\|\band\b|\bdel\b|\bfrom\b|\bnot\b|\bwhile\b|\bas\b|\belif\b|\bglobal\b|\bor\b|\bwith\b|\bassert\b|\belse\b|\bif\b|\bpass\b|\byield\b|\bbreak\b|\bexcept\b|\bimport\b|\bprint\b|\bclass\b|\bexec\b|\bin\b|\braise\b|\bcontinue\b|\bfinally\b|\bis\b|\breturn\b|\bdef\b|\bfor\b|\blambda\b|\btry\b/g;
 
+	regexAlfabetoPythonRetirar = / |\bself\b|\.|\bget\b|\bset\b|\(|\)|:|,|\\|\band\b|\bdel\b|\bfrom\b|\bnot\b|\bwhile\b|\bas\b|\belif\b|\bglobal\b|\bor\b|\bwith\b|\bassert\b|\belse\b|\bif\b|\bpass\b|\byield\b|\bbreak\b|\bexcept\b|\bimport\b|\bprint\b|\bclass\b|\bexec\b|\bin\b|\braise\b|\bcontinue\b|\bfinally\b|\bis\b|\breturn\b|\bdef\b|\bfor\b|\blambda\b|\btry\b/g;
 	//Retirando palavras do alfabeto das linguagens Python e Ignorar
 	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, regexAlfabetoPythonRetirar);
 	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, palavraPythonComentario);
 	console.log("CODIGO MODIFICADO\n" + selecaoCodigoModificada);
 	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, palavraPythonAtribuicao);
 	apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);
+}
+function executaExtensaoPythonPorNomesAtributos(){
+
 }
 function apresentaMetodosGetSetDocument(metodosGetSet : string, intervaloSelecao : vscode.Range) : void{	
 	var editorTextoAtivo = vscode.window.activeTextEditor;
