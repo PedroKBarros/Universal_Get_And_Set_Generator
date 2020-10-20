@@ -27,6 +27,7 @@ function executaExtensao():void{
 	var formatoArquivo:string;
 	var selecaoCodigo:string;
 	var intervaloSelecaoCodigo : vscode.Range;
+
 	if(vscode.window.activeTextEditor != undefined){
 		if(vscode.window.activeTextEditor.selections.length > 0){
 			intervaloSelecaoCodigo = retornaIntervaloSelecaoCodigoArquivo();
@@ -44,12 +45,10 @@ function retornaIntervaloSelecaoCodigoArquivo() : vscode.Range{
 	var inicioIntervaloSelecao:vscode.Position;
 	var fimIntervaloSelecao:vscode.Position;
 	var intervaloSelecao:vscode.Range;
-	var selecaoCodigo:string;
 
 	inicioIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.start.line!, vscode.window.activeTextEditor?.selection.start.character!);
 	fimIntervaloSelecao = new vscode.Position(vscode.window.activeTextEditor?.selection.end.line!, vscode.window.activeTextEditor?.selection.end.character!);
 	intervaloSelecao = new vscode.Range(inicioIntervaloSelecao, fimIntervaloSelecao)
-	
 	return intervaloSelecao;
 }
 function retornaSelecaoCodigoArquivo(intervaloSelecao : vscode.Range):string{
@@ -60,19 +59,21 @@ function retornaSelecaoCodigoArquivo(intervaloSelecao : vscode.Range):string{
 }
 function retornaFormatoArquivo(caminho:string):string{
 	var indicePonto = caminho.indexOf('.', 0);
+
 	return caminho.substring(indicePonto + 1, caminho.length);
 }
 function executaExtensaoPython(selecaoCodigo:string, formatoArquivo:string, intervaloSelecaoCodigo : vscode.Range):void{
-	var alfabetoPython : string[] = [" ", "#", "self", ".", "=", "get", "set", "(", ")", ":", ",", "\\"];
-	var alfabetoIgnorar : string[] = ["=", "#"];
 	var selecaoCodigoModificada : string;
 	var metodosGetSet : string;
+	var regexAlfabetoPythonRetirar : RegExp;
+	var palavraPythonComentario : string = "#";
+	var palavraPythonAtribuicao : string = "=";
+	regexAlfabetoPythonRetirar = / |self|\.|get|set|\(|\)|:|,|\\/g;
 
 	//Retirando palavras do alfabeto das linguagens Python e Ignorar
-	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, alfabetoPython, alfabetoIgnorar);
-	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, alfabetoPython[1]);
-	console.log("CÓDIGO MOD:\n" + selecaoCodigoModificada);
-	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, alfabetoPython[4]);
+	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, regexAlfabetoPythonRetirar);
+	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, palavraPythonComentario);
+	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, palavraPythonAtribuicao);
 	apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);
 }
 function apresentaMetodosGetSetDocument(metodosGetSet : string, intervaloSelecao : vscode.Range) : void{	
@@ -80,30 +81,29 @@ function apresentaMetodosGetSetDocument(metodosGetSet : string, intervaloSelecao
 	var documento = editorTextoAtivo?.edit(editBuilder => {
 		editBuilder.insert(intervaloSelecao.end, metodosGetSet);
 	})	
-	
 }
-function retiraComentariosSelecaoCodigoPython(selecaoCodigo : string, tokenComentario : string) : string{
-	var indiceTokenComentario : number = 0;
-	var indiceTokenQuebraLinha : number = 0;
+function retiraComentariosSelecaoCodigoPython(selecaoCodigo : string, palavraComentario : string) : string{
+	var indicePalavraComentario : number = 0;
+	var indicePalavraQuebraLinha : number = 0;
 	var strComentario : string;
 	var nomeAtributoAtual : string = "";
 	var charAtual : string;
-	while(indiceTokenComentario >= 0){
 
-		indiceTokenComentario = selecaoCodigo.indexOf(tokenComentario, 0);
-		if (indiceTokenComentario >= 0){
-			indiceTokenQuebraLinha = selecaoCodigo.indexOf("\n", indiceTokenComentario);
-			if (indiceTokenQuebraLinha < 0){
-				indiceTokenQuebraLinha = selecaoCodigo.length;
+	while(indicePalavraComentario >= 0){
+		indicePalavraComentario = selecaoCodigo.indexOf(palavraComentario, 0);
+		if (indicePalavraComentario >= 0){
+			indicePalavraQuebraLinha = selecaoCodigo.indexOf("\n", indicePalavraComentario);
+			if (indicePalavraQuebraLinha < 0){
+				indicePalavraQuebraLinha = selecaoCodigo.length;
 			}
-			strComentario = selecaoCodigo.substring(indiceTokenComentario, indiceTokenQuebraLinha);
+			strComentario = selecaoCodigo.substring(indicePalavraComentario, indicePalavraQuebraLinha);
 			selecaoCodigo = selecaoCodigo.replace(strComentario, "");
 		}
 		
 	}
 	return selecaoCodigo;
 }
-function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : string) : string{
+function geraMetodosGetSetPython(selecaoCodigo : string, palavraAtribuicao : string) : string{
 	var indiceTokenAtribuicao : number = 0;
 	var indiceTokenAnteriorAtribuicao : number = 0;
 	var indiceTokenQuebraLinha : number = 0;
@@ -113,7 +113,7 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 	var metodosGetSet : string = "\n\n";
 
 	while(indiceTokenAtribuicao >= 0){
-		indiceTokenAtribuicao = selecaoCodigo.indexOf(tokenAtribuicao, indiceTokenAnteriorAtribuicao + 1);
+		indiceTokenAtribuicao = selecaoCodigo.indexOf(palavraAtribuicao, indiceTokenAnteriorAtribuicao + 1);
 		if (indiceTokenAtribuicao >= 0){
 			if (numeroTokenAtribuicao == 0){
 				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao);
@@ -134,11 +134,11 @@ function geraMetodosGetSetPython(selecaoCodigo : string, tokenAtribuicao : strin
 		}
 		
 	}
-	
 	return metodosGetSet;
 }
 function geraMetodoGetPython(atributoNomeMetodo : string, atributoCodigo : string) : string{
 	var metodoGet : string;
+
 	//VsCode, por padrão, utiliza 4 espaços ao invés como tab
 	metodoGet = tabulacaoVSCode + "def get" + atributoNomeMetodo + "(self):\n";
 	metodoGet += tabulacaoVSCode + tabulacaoVSCode + "return self." + atributoCodigo + "\n\n";
@@ -146,6 +146,7 @@ function geraMetodoGetPython(atributoNomeMetodo : string, atributoCodigo : strin
 }
 function geraMetodoSetPython(atributoNomeMetodo : string, atributoCodigo : string) : string{
 	var metodoSet : string;
+
 	//VsCode, por padrão, utiliza 4 espaços ao invés como tab
 	metodoSet = tabulacaoVSCode + "def set" + atributoNomeMetodo + "(self, " + atributoCodigo + "):\n";
 	metodoSet += tabulacaoVSCode + tabulacaoVSCode + "self." + atributoCodigo + " = " + atributoCodigo + "\n\n";
@@ -154,16 +155,8 @@ function geraMetodoSetPython(atributoNomeMetodo : string, atributoCodigo : strin
 function formataNomeAtributoPython(atributo : string) : string{
 	return atributo.charAt(0).toUpperCase() + atributo.substring(1, atributo.length).toLowerCase();
 }
-function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, alfabetoPython : string[], alfabetoIgnorar : string[]) : string{
-	var palavraPython : string;
-	for(var i=0;i<alfabetoPython.length;i++){
-		palavraPython = alfabetoPython[i];
-		if (!alfabetoIgnorar.includes(palavraPython, 0)){
-			selecaoCodigo = selecaoCodigo.split(alfabetoPython[i]).join("");
-		}
-	}
-	return selecaoCodigo;
-	
+function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, regexAlfabetoPythonRetirar : RegExp) : string{	
+	return selecaoCodigo = selecaoCodigo.replace(regexAlfabetoPythonRetirar, "");
 }
 // this method is called when your extension is deactivated
 export function deactivate() {}
