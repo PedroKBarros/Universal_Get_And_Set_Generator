@@ -1,10 +1,13 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import { title } from 'process';
+import { exitCode, title } from 'process';
 import { pipeline } from 'stream';
 import * as vscode from 'vscode';
 
 const tabulacaoVSCode : string = "    ";
+const msgNenhumNomeAtributoComandoNomeAtributos : string = "You did not enter the name of at least one attribute."
+const separadorAtributosComandoNomeAtributos : string = "-"
+const msgEntradaAtributosComandoNomeAtributos : string = "Enter attribute names separated by '" + separadorAtributosComandoNomeAtributos + "'"
 const codigoComandoTrechoCodigoSelecionado : number = 1;
 const codigoComandoNomeAtributos : number = 2;
 // this method is called when your extension is activated
@@ -22,8 +25,13 @@ export function activate(context: vscode.ExtensionContext) {
 		// The code you place here will be executed every time your command is executed
 		executaExtensao(codigoComandoTrechoCodigoSelecionado);		
 	});
-	
+	let disposable2 = vscode.commands.registerCommand('unigetaset.attributeNamesGetSet', () => {
+		// The code you place here will be executed every time your command is executed
+		executaExtensao(codigoComandoNomeAtributos);		
+	});
+
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(disposable2);
 }
 function executaExtensao(codigoComando : number) : void{
 	var formatoArquivo:string;
@@ -65,6 +73,7 @@ function executaExtensaoPython(codigoComando : number, selecaoCodigo:string, int
 	switch(codigoComando){
 		case 1:
 			executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo, intervaloSelecaoCodigo);
+			break;
 		default:
 			executaExtensaoPythonPorNomesAtributos();
 	}
@@ -84,8 +93,28 @@ function executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo : string,
 	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, palavraPythonAtribuicao);
 	apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);
 }
-function executaExtensaoPythonPorNomesAtributos(){
-
+function executaExtensaoPythonPorNomesAtributos() : void{
+	var atributos : string;
+	atributos = solicitaNomeAtributos();
+	if (atributos == undefined)
+		return;
+	console.log("VAMOS CONTINUAR!");
+	
+}
+function solicitaNomeAtributos() : string{
+	var retornoInput : Thenable<string | undefined>;
+	var configuracaoInputBox : vscode.InputBoxOptions = {
+		prompt : msgEntradaAtributosComandoNomeAtributos
+	}
+	retornoInput = vscode.window.showInputBox(configuracaoInputBox);
+	retornoInput.then(function(atributos){
+		if (atributos == undefined)
+			return undefined;
+		if (atributos?.toString() == "")
+			vscode.window.showErrorMessage(msgNenhumNomeAtributoComandoNomeAtributos);
+		return atributos;
+	});
+	return "";
 }
 function apresentaMetodosGetSetDocument(metodosGetSet : string, intervaloSelecao : vscode.Range) : void{	
 	var editorTextoAtivo = vscode.window.activeTextEditor;
