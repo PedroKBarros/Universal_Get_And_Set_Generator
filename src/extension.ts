@@ -115,7 +115,7 @@ function executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo : vscode.
 			vscode.window.showErrorMessage(msgNenhumNomeAtributoComandoNomeAtributos);
 			return;
 		}
-		regexBuscaNomeAtributos = /-| |/g;
+		regexBuscaNomeAtributos = /-| /g;
 		atributos = valorInputBox.split(regexBuscaNomeAtributos);
 		if (atributos.length == 0){
 			vscode.window.showErrorMessage(msgEntradaDadosInputBoxInvalidaComandoNomeAtributos);
@@ -133,7 +133,8 @@ function geraMetodosGetSetNomesAtributos(atributos : string[]) : string{
 	metodosGetSet = "";
 	for(var i = 0; i < atributos.length;i++){
 		atributoAtual = atributos[i];
-		console.log(atributoAtual);
+		if (atributoAtual == "")
+			continue;
 		atributoAtualFormatado = formataNomeAtributoParaNomeMetodoGetSetPython(atributoAtual);
 		metodosGetSet += geraMetodoGetPython(atributoAtualFormatado, atributoAtual);
 		metodosGetSet += geraMetodoSetPython(atributoAtualFormatado, atributoAtual);
