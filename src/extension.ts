@@ -1,13 +1,15 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+import { promises, resolve } from 'dns';
 import { exitCode, title } from 'process';
 import { pipeline } from 'stream';
 import * as vscode from 'vscode';
 
 const tabulacaoVSCode : string = "    ";
 const msgNenhumNomeAtributoComandoNomeAtributos : string = "You did not enter the name of at least one attribute."
-const separadorAtributosComandoNomeAtributos : string = "-"
-const msgEntradaAtributosComandoNomeAtributos : string = "Enter attribute names separated by '" + separadorAtributosComandoNomeAtributos + "'"
+const msgEntradaDadosInputBoxInvalidaComandoNomeAtributos : string = "It was not possible to generate the Get and Set methods. Check the names of the passed attributes."
+const separadoresAtributosComandoNomeAtributos : string = "-, space or |"
+const msgEntradaAtributosComandoNomeAtributos : string = "Enter attribute names separated by " + separadoresAtributosComandoNomeAtributos +" special character"
 const codigoComandoTrechoCodigoSelecionado : number = 1;
 const codigoComandoNomeAtributos : number = 2;
 // this method is called when your extension is activated
@@ -75,7 +77,7 @@ function executaExtensaoPython(codigoComando : number, selecaoCodigo:string, int
 			executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo, intervaloSelecaoCodigo);
 			break;
 		default:
-			executaExtensaoPythonPorNomesAtributos();
+			executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo);
 	}
 }
 function executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo : string, intervaloSelecaoCodigo : vscode.Range) : void{
@@ -93,28 +95,49 @@ function executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo : string,
 	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, palavraPythonAtribuicao);
 	apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);
 }
-function executaExtensaoPythonPorNomesAtributos() : void{
-	var atributos : string;
-	atributos = solicitaNomeAtributos();
-	if (atributos == undefined)
-		return;
-	console.log("VAMOS CONTINUAR!");
-	
-}
-function solicitaNomeAtributos() : string{
+function executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo : vscode.Range) : void{
+	var valorInputBox : string;
+	var atributos : string[];
 	var retornoInput : Thenable<string | undefined>;
+	var regexBuscaNomeAtributos : RegExp;
+	var metodosGetSet : string;
 	var configuracaoInputBox : vscode.InputBoxOptions = {
 		prompt : msgEntradaAtributosComandoNomeAtributos
 	}
+	valorInputBox = "";
 	retornoInput = vscode.window.showInputBox(configuracaoInputBox);
-	retornoInput.then(function(atributos){
-		if (atributos == undefined)
-			return undefined;
-		if (atributos?.toString() == "")
+	retornoInput.then((valorInputBox) => {
+		if (valorInputBox == undefined){
+			return;
+		}
+		if (valorInputBox?.toString() == ""){
 			vscode.window.showErrorMessage(msgNenhumNomeAtributoComandoNomeAtributos);
-		return atributos;
+			return;
+		}
+		regexBuscaNomeAtributos = /-| |\|/g;
+		atributos = valorInputBox.split(regexBuscaNomeAtributos);
+		if (atributos.length == 0){
+			vscode.window.showErrorMessage(msgEntradaDadosInputBoxInvalidaComandoNomeAtributos);
+			return;
+		}
+		metodosGetSet = geraMetodosGetSetNomesAtributos(atributos);
+		apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);		
 	});
-	return "";
+
+}
+function geraMetodosGetSetNomesAtributos(atributos : string[]) : string{
+	var atributoAtual : string;
+	var atributoAtualFormatado : string;
+	var metodosGetSet : string;
+	metodosGetSet = "";
+	for(var i = 0; i < atributos.length;i++){
+		atributoAtual = atributos[i];
+		console.log(atributoAtual);
+		atributoAtualFormatado = formataNomeAtributoParaNomeMetodoGetSetPython(atributoAtual);
+		metodosGetSet += geraMetodoGetPython(atributoAtualFormatado, atributoAtual);
+		metodosGetSet += geraMetodoSetPython(atributoAtualFormatado, atributoAtual);
+	}
+	return metodosGetSet;
 }
 function apresentaMetodosGetSetDocument(metodosGetSet : string, intervaloSelecao : vscode.Range) : void{	
 	var editorTextoAtivo = vscode.window.activeTextEditor;
@@ -157,7 +180,7 @@ function geraMetodosGetSetPython(selecaoCodigo : string, palavraAtribuicao : str
 		if (indiceTokenAtribuicao >= 0){
 			if (numeroTokenAtribuicao == 0){
 				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao);
-				nomeAtributoAtualFormatado = formataNomeAtributoPython(nomeAtributoAtual);
+				nomeAtributoAtualFormatado = formataNomeAtributoParaNomeMetodoGetSetPython(nomeAtributoAtual);
 				metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				numeroTokenAtribuicao++;
@@ -165,7 +188,7 @@ function geraMetodosGetSetPython(selecaoCodigo : string, palavraAtribuicao : str
 			}else{
 				indiceTokenQuebraLinha = selecaoCodigo.indexOf("\n", indiceTokenAnteriorAtribuicao);
 				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenQuebraLinha + 1, indiceTokenAtribuicao);
-				nomeAtributoAtualFormatado = formataNomeAtributoPython(nomeAtributoAtual);
+				nomeAtributoAtualFormatado = formataNomeAtributoParaNomeMetodoGetSetPython(nomeAtributoAtual);
 				metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				numeroTokenAtribuicao++;
@@ -192,8 +215,8 @@ function geraMetodoSetPython(atributoNomeMetodo : string, atributoCodigo : strin
 	metodoSet += tabulacaoVSCode + tabulacaoVSCode + "self." + atributoCodigo + " = " + atributoCodigo + "\n\n";
 	return metodoSet;
 }
-function formataNomeAtributoPython(atributo : string) : string{
-	return atributo.charAt(0).toUpperCase() + atributo.substring(1, atributo.length).toLowerCase();
+function formataNomeAtributoParaNomeMetodoGetSetPython(atributo : string) : string{
+	return atributo.charAt(0).toUpperCase() + atributo.substring(1, atributo.length);
 }
 function retiraPalavrasSelecaoCodigoPython(selecaoCodigo : string, regexAlfabetoPythonRetirar : RegExp) : string{	
 	return selecaoCodigo = selecaoCodigo.replace(regexAlfabetoPythonRetirar, "");
