@@ -8,8 +8,8 @@ import * as vscode from 'vscode';
 const tabulacaoVSCode : string = "    ";
 const msgNenhumNomeAtributoComandoNomeAtributos : string = "You did not enter the name of at least one attribute."
 const msgEntradaDadosInputBoxInvalidaComandoNomeAtributos : string = "It was not possible to generate the Get and Set methods. Check the names of the passed attributes."
-const separadoresAtributosComandoNomeAtributos : string = "-, space or |"
-const msgEntradaAtributosComandoNomeAtributos : string = "Enter attribute names separated by " + separadoresAtributosComandoNomeAtributos +" special character"
+const separadoresAtributosComandoNomeAtributos : string = "'-' or space"
+const msgEntradaAtributosComandoNomeAtributos : string = "Enter attribute names separated by " + separadoresAtributosComandoNomeAtributos
 const codigoComandoTrechoCodigoSelecionado : number = 1;
 const codigoComandoNomeAtributos : number = 2;
 // this method is called when your extension is activated
@@ -111,10 +111,11 @@ function executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo : vscode.
 			return;
 		}
 		if (valorInputBox?.toString() == ""){
+
 			vscode.window.showErrorMessage(msgNenhumNomeAtributoComandoNomeAtributos);
 			return;
 		}
-		regexBuscaNomeAtributos = /-| |\|/g;
+		regexBuscaNomeAtributos = /-| |/g;
 		atributos = valorInputBox.split(regexBuscaNomeAtributos);
 		if (atributos.length == 0){
 			vscode.window.showErrorMessage(msgEntradaDadosInputBoxInvalidaComandoNomeAtributos);
