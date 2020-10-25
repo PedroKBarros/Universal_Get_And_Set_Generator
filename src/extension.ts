@@ -10,8 +10,12 @@ const msgNenhumNomeAtributoComandoNomeAtributos : string = "You did not enter th
 const msgEntradaDadosInputBoxInvalidaComandoNomeAtributos : string = "It was not possible to generate the Get and Set methods. Check the names of the passed attributes."
 const separadoresAtributosComandoNomeAtributos : string = "'-' or space"
 const msgEntradaAtributosComandoNomeAtributos : string = "Enter attribute names separated by " + separadoresAtributosComandoNomeAtributos
-const codigoComandoTrechoCodigoSelecionado : number = 1;
-const codigoComandoNomeAtributos : number = 2;
+const codigoComandoTrechoCodigoSelecionadoGetSet : number = 1;
+const codigoComandoTrechoCodigoSelecionadoGet : number = 3;
+const codigoComandoTrechoCodigoSelecionadoSet : number = 4;
+const codigoComandoNomeAtributosGetSet : number = 2;
+const codigoComandoNomeAtributosGet : number = 5;
+const codigoComandoNomeAtributosSet : number = 6;
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -25,15 +29,37 @@ export function activate(context: vscode.ExtensionContext) {
 	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('unigetaset.selectionGetSet', () => {
 		// The code you place here will be executed every time your command is executed
-		executaExtensao(codigoComandoTrechoCodigoSelecionado);		
+		executaExtensao(codigoComandoTrechoCodigoSelecionadoGetSet);		
+	});
+	let disposable3 = vscode.commands.registerCommand('unigetaset.selectionGet', () => {
+		// The code you place here will be executed every time your command is executed
+		executaExtensao(codigoComandoTrechoCodigoSelecionadoGet);		
+	});
+	let disposable4 = vscode.commands.registerCommand('unigetaset.selectionSet', () => {
+		// The code you place here will be executed every time your command is executed
+		executaExtensao(codigoComandoTrechoCodigoSelecionadoSet);		
 	});
 	let disposable2 = vscode.commands.registerCommand('unigetaset.attributeNamesGetSet', () => {
 		// The code you place here will be executed every time your command is executed
-		executaExtensao(codigoComandoNomeAtributos);		
+		executaExtensao(codigoComandoNomeAtributosGetSet);		
 	});
+	let disposable5 = vscode.commands.registerCommand('unigetaset.attributeNamesGet', () => {
+		// The code you place here will be executed every time your command is executed
+		executaExtensao(codigoComandoNomeAtributosGet);		
+	});
+
+	let disposable6 = vscode.commands.registerCommand('unigetaset.attributeNamesSet', () => {
+		// The code you place here will be executed every time your command is executed
+		executaExtensao(codigoComandoNomeAtributosSet);		
+	});
+
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(disposable2);
+	context.subscriptions.push(disposable3);
+	context.subscriptions.push(disposable4);
+	context.subscriptions.push(disposable5);
+	context.subscriptions.push(disposable6);
 }
 function executaExtensao(codigoComando : number) : void{
 	var formatoArquivo:string;
@@ -72,15 +98,27 @@ function retornaFormatoArquivo(caminho:string):string{
 	return caminho.substring(indicePonto + 1, caminho.length);
 }
 function executaExtensaoPython(codigoComando : number, selecaoCodigo:string, intervaloSelecaoCodigo : vscode.Range):void{
-	switch(codigoComando){
-		case 1:
-			executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo, intervaloSelecaoCodigo);
-			break;
-		default:
-			executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo);
-	}
+	var incluiGet : boolean;
+	var incluiSet : boolean;
+	
+	incluiGet = EhIncluirGet(codigoComando);
+	incluiSet = EhIncluirSet(codigoComando);
+	if (ehComandoSelecaoCodigo(codigoComando))
+			executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo, intervaloSelecaoCodigo, incluiGet, incluiSet);
+	else
+		executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo, incluiGet, incluiSet);
+	
 }
-function executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo : string, intervaloSelecaoCodigo : vscode.Range) : void{
+function ehComandoSelecaoCodigo(codigoComando : number) : boolean{
+	return codigoComando == 1 || codigoComando == 3 || codigoComando == 4;
+}
+function EhIncluirGet(codigoComando : number) : boolean{
+	return codigoComando == 1 || codigoComando == 2 || codigoComando == 3 || codigoComando == 5;
+}
+function EhIncluirSet(codigoComando : number) : boolean{
+	return codigoComando == 1 || codigoComando == 2 || codigoComando == 4 || codigoComando == 6;
+}
+function executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo : string, intervaloSelecaoCodigo : vscode.Range, incluiGet : boolean, incluiSet : boolean) : void{
 	var selecaoCodigoModificada : string;
 	var metodosGetSet : string;
 	var regexAlfabetoPythonRetirar : RegExp;
@@ -92,10 +130,10 @@ function executaExtensaoPythonPorTrechoCodigoSelecionado(selecaoCodigo : string,
 	selecaoCodigoModificada = retiraPalavrasSelecaoCodigoPython(selecaoCodigo, regexAlfabetoPythonRetirar);
 	selecaoCodigoModificada = retiraComentariosSelecaoCodigoPython(selecaoCodigoModificada, palavraPythonComentario);
 	console.log("CODIGO MODIFICADO\n" + selecaoCodigoModificada);
-	metodosGetSet = geraMetodosGetSetPython(selecaoCodigoModificada, palavraPythonAtribuicao);
+	metodosGetSet = geraMetodosGetSetCodigoSelecionadoPython(selecaoCodigoModificada, palavraPythonAtribuicao, incluiGet, incluiSet);
 	apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);
 }
-function executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo : vscode.Range) : void{
+function executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo : vscode.Range, incluiGet : boolean, incluiSet : boolean) : void{
 	var valorInputBox : string;
 	var atributos : string[];
 	var retornoInput : Thenable<string | undefined>;
@@ -121,12 +159,12 @@ function executaExtensaoPythonPorNomesAtributos(intervaloSelecaoCodigo : vscode.
 			vscode.window.showErrorMessage(msgEntradaDadosInputBoxInvalidaComandoNomeAtributos);
 			return;
 		}
-		metodosGetSet = geraMetodosGetSetNomesAtributos(atributos);
+		metodosGetSet = geraMetodosGetSetNomesAtributos(atributos, incluiGet, incluiSet);
 		apresentaMetodosGetSetDocument(metodosGetSet, intervaloSelecaoCodigo);		
 	});
 
 }
-function geraMetodosGetSetNomesAtributos(atributos : string[]) : string{
+function geraMetodosGetSetNomesAtributos(atributos : string[], incluiGet : boolean, incluiSet : boolean) : string{
 	var atributoAtual : string;
 	var atributoAtualFormatado : string;
 	var metodosGetSet : string;
@@ -136,8 +174,10 @@ function geraMetodosGetSetNomesAtributos(atributos : string[]) : string{
 		if (atributoAtual == "")
 			continue;
 		atributoAtualFormatado = formataNomeAtributoParaNomeMetodoGetSetPython(atributoAtual);
-		metodosGetSet += geraMetodoGetPython(atributoAtualFormatado, atributoAtual);
-		metodosGetSet += geraMetodoSetPython(atributoAtualFormatado, atributoAtual);
+		if (incluiGet)
+			metodosGetSet += geraMetodoGetPython(atributoAtualFormatado, atributoAtual);
+		if (incluiSet)
+			metodosGetSet += geraMetodoSetPython(atributoAtualFormatado, atributoAtual);
 	}
 	return metodosGetSet;
 }
@@ -168,7 +208,7 @@ function retiraComentariosSelecaoCodigoPython(selecaoCodigo : string, palavraCom
 	}
 	return selecaoCodigo;
 }
-function geraMetodosGetSetPython(selecaoCodigo : string, palavraAtribuicao : string) : string{
+function geraMetodosGetSetCodigoSelecionadoPython(selecaoCodigo : string, palavraAtribuicao : string, incluiGet : boolean, incluiSet : boolean) : string{
 	var indiceTokenAtribuicao : number = 0;
 	var indiceTokenAnteriorAtribuicao : number = 0;
 	var indiceTokenQuebraLinha : number = 0;
@@ -183,16 +223,20 @@ function geraMetodosGetSetPython(selecaoCodigo : string, palavraAtribuicao : str
 			if (numeroTokenAtribuicao == 0){
 				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenAnteriorAtribuicao, indiceTokenAtribuicao);
 				nomeAtributoAtualFormatado = formataNomeAtributoParaNomeMetodoGetSetPython(nomeAtributoAtual);
-				metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
-				metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
+				if (incluiGet)
+					metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
+				if (incluiSet)
+					metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				numeroTokenAtribuicao++;
 				indiceTokenAnteriorAtribuicao = indiceTokenAtribuicao;
 			}else{
 				indiceTokenQuebraLinha = selecaoCodigo.indexOf("\n", indiceTokenAnteriorAtribuicao);
 				nomeAtributoAtual = selecaoCodigo.substring(indiceTokenQuebraLinha + 1, indiceTokenAtribuicao);
 				nomeAtributoAtualFormatado = formataNomeAtributoParaNomeMetodoGetSetPython(nomeAtributoAtual);
-				metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
-				metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
+				if (incluiGet)
+					metodosGetSet += geraMetodoGetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
+				if (incluiSet)
+					metodosGetSet += geraMetodoSetPython(nomeAtributoAtualFormatado, nomeAtributoAtual);
 				numeroTokenAtribuicao++;
 				indiceTokenAnteriorAtribuicao = indiceTokenAtribuicao;
 			}

@@ -11,7 +11,12 @@
 	],
 	"activationEvents": [
 		"onCommand:unigetaset.selectionGetSet",
-		"onCommand:unigetaset.attributeNamesGetSet"
+		"onCommand:unigetaset.selectionGet",
+		"onCommand:unigetaset.selectionSet",
+	
+		"onCommand:unigetaset.attributeNamesGetSet",
+		"onCommand:unigetaset.attributeNamesGet",
+		"onCommand:unigetaset.attributeNamesSet"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -21,8 +26,24 @@
 				"title": "unigetaset: Selection Get and Set"
 			},
 			{
+				"command": "unigetaset.selectionGet",
+				"title": "unigetaset: Selection Only Get"
+			},
+			{
+				"command": "unigetaset.selectionSet",
+				"title": "unigetaset: Selection Only Set"
+			},
+			{
 				"command": "unigetaset.attributeNamesGetSet",
 				"title": "unigetaset: Attribute Names Get and Set"
+			},
+			{
+				"command": "unigetaset.attributeNamesGet",
+				"title": "unigetaset: Attribute Names Only Get"
+			},
+			{
+				"command": "unigetaset.attributeNamesSet",
+				"title": "unigetaset: Attribute Names Only Set"
 			}
 		]
 	},
